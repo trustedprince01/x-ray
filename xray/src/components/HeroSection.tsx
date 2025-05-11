@@ -1,4 +1,3 @@
-
 import React from 'react';
 import TweetForm from './TweetForm';
 import { Bot, Twitter } from 'lucide-react';
@@ -29,7 +28,7 @@ export default function HeroSection() {
       </div>
 
       {/* Twitter Screenshots on both sides - visible on larger screens */}
-      <div className="hidden md:block absolute left-0 transform -translate-x-full">
+      <div className="hidden md:block absolute left-0 transform -translate-x-full top-0">
         <div className="flex flex-col gap-4">
           <div className="bg-muted p-4 rounded-xl hover:scale-[1.02] transition-transform shadow-lg">
             <img src="/images/13b96032-1d7a-44b9-8afc-c390afe658c9.png" 
@@ -44,13 +43,22 @@ export default function HeroSection() {
         </div>
       </div>
 
-      <div className="hidden md:block absolute right-0 transform translate-x-full">
+      <div className="hidden md:block absolute right-0 transform translate-x-full top-0">
         <div className="flex flex-col gap-4">
           <div className="bg-muted p-4 rounded-xl hover:scale-[1.02] transition-transform shadow-lg">
             <img src="/images/d0cde4c3-802a-4d0e-bd94-e0a13f40ec5a.png" 
                  alt="Twitter discussion" 
                  className="w-64 rounded-lg" />
           </div>
+        </div>
+      </div>
+      
+      {/* Mobile tweet examples - only visible on small screens */}
+      <div className="grid grid-cols-1 gap-4 mt-8 w-full md:hidden">
+        <div className="bg-muted p-3 rounded-xl hover:scale-[1.02] transition-transform shadow-lg max-w-xs mx-auto">
+          <img src="/images/13b96032-1d7a-44b9-8afc-c390afe658c9.png" 
+               alt="Twitter discussion" 
+               className="w-full rounded-lg" />
         </div>
       </div>
       
