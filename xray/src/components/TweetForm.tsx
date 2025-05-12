@@ -1,5 +1,5 @@
-
 import React, { useState } from 'react';
+import type { TweetAnalysis } from './AnalysisResults';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { toast } from '@/hooks/use-toast';
@@ -10,10 +10,11 @@ export default function TweetForm() {
   const [tweetUrl, setTweetUrl] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const [showResults, setShowResults] = useState(false);
+  const [analysisData, setAnalysisData] = useState<TweetAnalysis | null>(null); // 👈 hold backend response
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    
+
     if (!tweetUrl) {
       toast({
         title: "Please enter a Tweet URL",
@@ -21,25 +22,50 @@ export default function TweetForm() {
       });
       return;
     }
-    
+
     setIsLoading(true);
-    
-    // Simulate API call
-    setTimeout(() => {
+    setShowResults(false);
+
+    try {
+      const response = await fetch('http://localhost:8000/api/analyze/', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ tweetUrl }),
+      });
+
+      const data = await response.json();
+
+      if (!response.ok) {
+        throw new Error(data.error || 'Something went wrong');
+      }
+
+      // Save the backend data to state
+      setAnalysisData(data);
+      setShowResults(true);
+
       toast({
         title: "Analysis complete",
         description: "We've analyzed the tweet comments for you.",
       });
-      setIsLoading(false);
-      setShowResults(true);
-      // Smooth scroll to results
+
       setTimeout(() => {
         document.getElementById('results-section')?.scrollIntoView({ 
           behavior: 'smooth',
           block: 'start'
         });
       }, 100);
-    }, 2000);
+
+    } catch (error: any) {
+      toast({
+        title: "Error",
+        description: error.message || "Something went wrong while analyzing.",
+        variant: "destructive",
+      });
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   return (
@@ -78,7 +104,7 @@ export default function TweetForm() {
       </form>
 
       <div id="results-section">
-        <AnalysisResults isVisible={showResults} />
+        <AnalysisResults isVisible={showResults} data={analysisData} />
       </div>
     </>
   );

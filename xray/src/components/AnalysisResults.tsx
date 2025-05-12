@@ -12,8 +12,20 @@ import {
   ResponsiveContainer 
 } from 'recharts';
 
+export interface TweetAnalysis {
+  replies: string[];
+  sentiment?: {
+    positive: number;
+    negative: number;
+    neutral: number;
+  };
+  hashtags?: string[];
+  topics?: string[];
+}
+
 interface AnalysisResultsProps {
   isVisible: boolean;
+  data: TweetAnalysis | null;
 }
 
 const platformData = [
@@ -37,7 +49,7 @@ const keyInsights = [
   'Feature requests focused on integration capabilities'
 ];
 
-const AnalysisResults: React.FC<AnalysisResultsProps> = ({ isVisible }) => {
+const AnalysisResults: React.FC<AnalysisResultsProps> = ({ isVisible, data }) => {
   const copyToClipboard = (text: string) => {
     navigator.clipboard.writeText(text);
     // Could add a toast notification here
