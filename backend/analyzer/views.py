@@ -1,4 +1,5 @@
 from textblob import TextBlob
+from django.views.decorators.csrf import csrf_exempt
 import json
 import snscrape.modules.twitter as sntwitter
 from django.http import JsonResponse
