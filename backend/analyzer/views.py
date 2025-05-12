@@ -36,7 +36,10 @@ def analyze_tweet(request):
         response.raise_for_status()
         data = response.json()
 
-        return JsonResponse({"comments": data})
+        # Directly return the comments from Apify
+        return JsonResponse({
+            "comments": [item.get('text', '') for item in data.get('data', [])]
+        })
 
     except Exception as e:
         return JsonResponse({"error": str(e)}, status=500)
