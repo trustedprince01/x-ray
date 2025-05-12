@@ -1,60 +1,42 @@
-from textblob import TextBlob
 from django.views.decorators.csrf import csrf_exempt
-import json
-import snscrape.modules.twitter as sntwitter
 from django.http import JsonResponse
-import re
+import requests
+import json
+
+# Replace these with your actual values
+APIFY_API_KEY = "apify_api_2ImNdCoNuYYIiUCRE7OpcIp2wo0JOW0fBuct"
+ACTOR_ID = "quacker/twitter-scraper"
 
 @csrf_exempt
 def analyze_tweet(request):
     if request.method == 'POST':
         try:
             data = json.loads(request.body)
-            tweet_url = data.get('tweetUrl')
+            tweet_url = data.get("tweetUrl")
+        except json.JSONDecodeError:
+            return JsonResponse({"error": "Invalid JSON"}, status=400)
+    else:
+        tweet_url = request.GET.get("url")
 
-            if not tweet_url:
-                return JsonResponse({'error': 'Tweet URL is required'}, status=400)
+    if not tweet_url:
+        return JsonResponse({"error": "Tweet URL is required"}, status=400)
 
-            # Extract tweet ID
-            tweet_id_match = re.search(r'/status/(\d+)', tweet_url)
-            if not tweet_id_match:
-                return JsonResponse({'error': 'Invalid Tweet URL'}, status=400)
+    # Apify URL to trigger actor run
+    start_run_url = f"https://api.apify.com/v2/actor-tasks/{ACTOR_ID}/run-sync-get-dataset-items?token={APIFY_API_KEY}"
 
-            tweet_id = tweet_id_match.group(1)
+    # Request payload
+    payload = {
+        "mode": "replies",
+        "startUrls": [{"url": tweet_url}],
+        "maxTweets": 20
+    }
 
-            # Scrape replies
-            query = f'conversation_id:{tweet_id}'
-            replies = []
-            for i, tweet in enumerate(sntwitter.TwitterSearchScraper(query).get_items()):
-                if i >= 30:  # Limit to 30 replies
-                    break
-                replies.append(tweet.content)
+    try:
+        response = requests.post(start_run_url, json=payload)
+        response.raise_for_status()
+        data = response.json()
 
-            # Analyze sentiment of each reply
-            sentiments = {'positive': 0, 'negative': 0, 'neutral': 0}
+        return JsonResponse({"comments": data})
 
-            for reply in replies:
-                analysis = TextBlob(reply)
-                sentiment = analysis.sentiment.polarity  # Get polarity score
-
-                if sentiment > 0:
-                    sentiments['positive'] += 1
-                elif sentiment < 0:
-                    sentiments['negative'] += 1
-                else:
-                    sentiments['neutral'] += 1
-
-            # Example summary of analysis
-            total_replies = len(replies)
-            summary = f"Analyzed {total_replies} replies. {sentiments['positive']} positive, {sentiments['negative']} negative, {sentiments['neutral']} neutral."
-
-            return JsonResponse({
-                "summary": summary,
-                "replies": replies,
-                "sentiment_analysis": sentiments,
-            })
-
-        except Exception as e:
-            return JsonResponse({'error': 'Something went wrong.'}, status=500)
-
-    return JsonResponse({'error': 'Invalid request method'}, status=405)
+    except Exception as e:
+        return JsonResponse({"error": str(e)}, status=500)
